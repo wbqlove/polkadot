@@ -397,6 +397,7 @@ where
 	use polkadot_node_core_provisioner::ProvisioningSubsystem as ProvisionerSubsystem;
 	use polkadot_node_core_runtime_api::RuntimeApiSubsystem;
 	use polkadot_statement_distribution::StatementDistribution as StatementDistributionSubsystem;
+	use polkadot_approval_distribution::ApprovalDistribution as ApprovalDistributionSubsystem;
 
 	let all_subsystems = AllSubsystems {
 		availability_distribution: AvailabilityDistributionSubsystem::new(
@@ -464,6 +465,9 @@ where
 			spawner.clone(),
 		),
 		statement_distribution: StatementDistributionSubsystem::new(
+			Metrics::register(registry)?,
+		),
+		approval_distribution: ApprovalDistributionSubsystem::new(
 			Metrics::register(registry)?,
 		),
 	};
