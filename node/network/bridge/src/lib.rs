@@ -770,7 +770,10 @@ mod tests {
 	use parking_lot::Mutex;
 	use assert_matches::assert_matches;
 
-	use polkadot_subsystem::messages::{StatementDistributionMessage, BitfieldDistributionMessage};
+	use polkadot_subsystem::messages::{
+		StatementDistributionMessage, BitfieldDistributionMessage,
+		ApprovalDistributionMessage,
+	};
 	use polkadot_node_subsystem_test_helpers::{
 		SingleItemSink, SingleItemStream, TestSubsystemContextHandle,
 	};
@@ -965,6 +968,13 @@ mod tests {
 			virtual_overseer.recv().await,
 			AllMessages::StatementDistribution(
 				StatementDistributionMessage::NetworkBridgeUpdateV1(e)
+			) if e == event.focus().expect("could not focus message")
+		);
+
+		assert_matches!(
+			virtual_overseer.recv().await,
+			AllMessages::ApprovalDistribution(
+				ApprovalDistributionMessage::NetworkBridgeUpdateV1(e)
 			) if e == event.focus().expect("could not focus message")
 		);
 	}
