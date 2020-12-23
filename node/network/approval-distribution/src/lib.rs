@@ -166,8 +166,7 @@ impl State {
 		metrics: &Metrics,
 		metas: Vec<BlockApprovalMeta>,
 	) {
-		// TODO: get rid of superfluous clones
-		let hashes: HashSet<Hash> = metas.iter().map(|m| m.hash.clone()).collect();
+		let hashes: HashSet<&Hash> = metas.iter().map(|m| &m.hash).collect();
 		for meta in metas.iter() {
 			match self.blocks.entry(meta.hash.clone()) {
 				hash_map::Entry::Vacant(entry) => {
@@ -184,10 +183,10 @@ impl State {
 			self.blocks_by_number.entry(meta.number).or_default().push(meta.hash.clone());
 		}
 		for (peer_id, view) in self.peer_views.iter() {
-			let view_set = view.heads.iter().cloned().collect::<HashSet<_>>();
+			let view_set = view.heads.iter().collect::<HashSet<_>>();
 			let intersection = view_set.intersection(&hashes);
 			let view_intersection = View {
-				heads: intersection.cloned().collect(),
+				heads: intersection.map(|h| **h).collect(),
 				finalized_number: view.finalized_number,
 			};
 			Self::unify_with_peer(
