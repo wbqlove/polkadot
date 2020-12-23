@@ -261,15 +261,19 @@ impl State {
 	) {
 		Self::unify_with_peer(&mut self.blocks, ctx, metrics, peer_id.clone(), view.clone()).await;
 		let finalized_number = view.finalized_number;
-		self.peer_views.insert(peer_id.clone(), view);
+		let old_view = self.peer_views.insert(peer_id.clone(), view);
+		let old_finalized_number = old_view.map(|v| v.finalized_number).unwrap_or(0);
 
 		// we want to prune every block known_by peer up to (including) view.finalized_number
 		let blocks = &mut self.blocks;
 		// the `BTreeMap::range` is constrained by stored keys
 		// so the loop won't take ages if the new finalized_number skyrockets
 		// but we need to make sure the range is not empty, otherwise it will panic
-		self.blocks_by_number
-			.range(0..=finalized_number)
+		// it shouldn't be, we make sure of this in the network bridge
+		let range = old_finalized_number..=finalized_number;
+		if !range.is_empty() {
+			self.blocks_by_number
+			.range(range)
 			.map(|(_n, h)| h)
 			.flatten()
 			.for_each(|h| {
@@ -277,6 +281,7 @@ impl State {
 					entry.known_by.remove(&peer_id);
 				}
 			});
+		}
 	}
 
 	async fn handle_our_view_change(

@@ -418,7 +418,9 @@ async fn handle_peer_messages<M>(
 	for message in messages {
 		outgoing_messages.push(match message {
 			WireMessage::ViewUpdate(new_view) => {
-				if new_view.heads.len() > MAX_VIEW_HEADS {
+				if new_view.heads.len() > MAX_VIEW_HEADS ||
+					new_view.finalized_number < peer_data.view.finalized_number
+				{
 					net.report_peer(
 						peer.clone(),
 						MALFORMED_VIEW_COST,
@@ -1434,6 +1436,46 @@ mod tests {
 					peer_a,
 					PeerSet::Validation,
 					wire_message.clone(),
+				),
+			));
+		});
+	}
+
+	#[test]
+	fn view_finalized_number_can_not_go_down() {
+		test_harness(|test_harness| async move {
+			let TestHarness { mut network_handle, .. } = test_harness;
+
+			let peer_a = PeerId::random();
+
+			network_handle.connect_peer(
+				peer_a.clone(),
+				PeerSet::Validation,
+				ObservedRole::Full,
+			).await;
+
+			network_handle.peer_message(
+				peer_a.clone(),
+				PeerSet::Validation,
+				WireMessage::<protocol_v1::ValidationProtocol>::ViewUpdate(
+					View { heads: vec![], finalized_number: 1 },
+				).encode(),
+			).await;
+
+			network_handle.peer_message(
+				peer_a.clone(),
+				PeerSet::Validation,
+				WireMessage::<protocol_v1::ValidationProtocol>::ViewUpdate(
+					View { heads: vec![], finalized_number: 0 },
+				).encode(),
+			).await;
+
+			let actions = network_handle.next_network_actions(1).await;
+			assert!(network_actions_contains(
+				&actions,
+				&NetworkAction::ReputationChange(
+					peer_a.clone(),
+					MALFORMED_VIEW_COST,
 				),
 			));
 		});
