@@ -343,7 +343,9 @@ impl State {
 			// if the assignment is known to be valid, reward the peer
 			if entry.knowledge.known_messages.contains(&fingerprint) {
 				modify_reputation(ctx, peer_id.clone(), BENEFIT_VALID_MESSAGE).await;
-				entry.known_by.entry(peer_id).or_default().known_messages.insert(fingerprint.clone());
+				if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
+					peer_knowledge.known_messages.insert(fingerprint.clone());
+				}
 				return;
 			}
 
@@ -373,11 +375,9 @@ impl State {
 						modify_reputation(ctx, peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST).await;
 					}
 					entry.knowledge.known_messages.insert(fingerprint.clone());
-					entry.known_by
-						.entry(peer_id)
-						.or_default()
-						.known_messages
-						.insert(fingerprint.clone());
+					if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
+						peer_knowledge.known_messages.insert(fingerprint.clone());
+					}
 				}
 				AssignmentCheckResult::TooFarInFuture => {
 					modify_reputation(ctx, peer_id, COST_ASSIGNMENT_TOO_FAR_IN_THE_FUTURE).await;
@@ -495,7 +495,9 @@ impl State {
 			// if the assignment is known to be valid, reward the peer
 			if entry.knowledge.known_messages.contains(&fingerprint) {
 				modify_reputation(ctx, peer_id.clone(), BENEFIT_VALID_MESSAGE).await;
-				entry.known_by.entry(peer_id).or_default().known_messages.insert(fingerprint.clone());
+				if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
+					peer_knowledge.known_messages.insert(fingerprint.clone());
+				}
 				return;
 			}
 
@@ -523,11 +525,9 @@ impl State {
 					modify_reputation(ctx, peer_id.clone(), BENEFIT_VALID_MESSAGE_FIRST).await;
 
 					entry.knowledge.known_messages.insert(fingerprint.clone());
-					entry.known_by
-						.entry(peer_id)
-						.or_default()
-						.known_messages
-						.insert(fingerprint.clone());
+					if let Some(peer_knowledge) = entry.known_by.get_mut(&peer_id) {
+						peer_knowledge.known_messages.insert(fingerprint.clone());
+					}
 				}
 				ApprovalCheckResult::Bad => {
 					modify_reputation(ctx, peer_id, COST_INVALID_MESSAGE).await;
