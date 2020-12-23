@@ -216,7 +216,7 @@ impl View {
 pub mod v1 {
 	use polkadot_primitives::v1::{
 		Hash, CollatorId, Id as ParaId, ErasureChunk, CandidateReceipt,
-		SignedAvailabilityBitfield, PoV, CandidateHash,
+		SignedAvailabilityBitfield, PoV, CandidateHash, CandidateIndex,
 	};
 	use polkadot_node_primitives::{
 		SignedFullStatement,
@@ -268,10 +268,9 @@ pub mod v1 {
 	pub enum ApprovalDistributionMessage {
 		/// Assignments for candidates in recent, unfinalized blocks.
 		///
-		/// The u32 is the claimed index of the candidate this assignment corresponds to.
 		/// Actually checking the assignment may yield a different result.
 		#[codec(index = "0")]
-		Assignments(Vec<(IndirectAssignmentCert, u32)>),
+		Assignments(Vec<(IndirectAssignmentCert, CandidateIndex)>),
 		/// Approvals for candidates in some recent, unfinalized block.
 		#[codec(index = "1")]
 		Approvals(Vec<IndirectSignedApprovalVote>),

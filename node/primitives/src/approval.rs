@@ -21,7 +21,7 @@ pub use sp_consensus_slots::SlotNumber;
 
 use polkadot_primitives::v1::{
 	CandidateHash, Hash, ValidatorIndex, Signed, ValidatorSignature, CoreIndex,
-	BlockNumber,
+	BlockNumber, CandidateIndex,
 };
 use parity_scale_codec::{Encode, Decode};
 
@@ -99,7 +99,7 @@ pub struct IndirectSignedApprovalVote {
 	/// A block hash where the candidate appears.
 	pub block_hash: Hash,
 	/// The index of the candidate in the list of candidates fully included as-of the block.
-	pub candidate_index: u32,
+	pub candidate_index: CandidateIndex,
 	/// The validator index.
 	pub validator: ValidatorIndex,
 	/// The signature by the validator.

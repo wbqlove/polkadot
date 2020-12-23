@@ -27,7 +27,7 @@ mod tests;
 use std::collections::{BTreeMap, HashMap, HashSet, hash_map};
 use futures::{channel::oneshot, FutureExt as _};
 use polkadot_primitives::v1::{
-	Hash, BlockNumber, ValidatorIndex, ValidatorSignature,
+	Hash, BlockNumber, ValidatorIndex, ValidatorSignature, CandidateIndex,
 };
 use polkadot_node_primitives::{
 	approval::{AssignmentCert, BlockApprovalMeta, IndirectSignedApprovalVote, IndirectAssignmentCert},
@@ -74,9 +74,6 @@ struct State {
 	/// Peer view data is partially stored here, and partially inline within the [`BlockEntry`]s
 	peer_views: HashMap<PeerId, View>,
 }
-
-// TODO: Make it public and put in primitives?
-type CandidateIndex = u32;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 enum MessageFingerprint {
