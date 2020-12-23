@@ -67,7 +67,7 @@ pub struct ApprovalDistribution {
 /// which assignments and approvals we have seen, and our peers' views.
 #[derive(Default)]
 struct State {
-	/// These three fields are used in conjunction to construct a view over the unfinalized chain.
+	/// These two fields are used in conjunction to construct a view over the unfinalized chain.
 	blocks_by_number: BTreeMap<BlockNumber, Vec<Hash>>,
 	blocks: HashMap<Hash, BlockEntry>,
 
@@ -266,8 +266,11 @@ impl State {
 		let finalized_number = view.finalized_number;
 		self.peer_views.insert(peer_id.clone(), view);
 
-		// cleanup
+		// we want to prune every block known_by peer up to (including) view.finalized_number
 		let blocks = &mut self.blocks;
+		// the `BTreeMap::range` is constrained by stored keys
+		// so the loop won't take ages if the new finalized_number skyrockets
+		// but we need to make sure the range is not empty, otherwise it will panic
 		self.blocks_by_number
 			.range(0..=finalized_number)
 			.map(|(_n, h)| h)
@@ -284,11 +287,15 @@ impl State {
 		_metrics: &Metrics,
 		view: View,
 	) {
+		// we want to prune every block up to (including) view.finalized_number
+		// why +1 here?
 		// split_off returns everything after the given key, including the key
 		let split_point = view.finalized_number.saturating_add(1);
 		let mut old_blocks = self.blocks_by_number.split_off(&split_point);
+		// after split_off old_blocks actually contains new blocks, we need to swap
 		std::mem::swap(&mut self.blocks_by_number, &mut old_blocks);
 
+		// now that we pruned `self.blocks_by_number`, let's clean up `self.blocks` too
 		old_blocks.values()
 			.flatten()
 			.for_each(|h| {
