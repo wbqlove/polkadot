@@ -113,6 +113,8 @@ pub struct BlockApprovalMeta {
 	pub hash: Hash,
 	/// The number of the block.
 	pub number: BlockNumber,
+	/// The hash of the parent block.
+	pub parent_hash: Hash,
 	/// The candidates included by the block.
 	/// Note that these are not the same as the candidates that appear within the block body.
 	pub candidates: Vec<CandidateHash>,

@@ -35,7 +35,7 @@ use polkadot_node_primitives::{
 use polkadot_node_subsystem::{
 	messages::{
 		AllMessages, ApprovalDistributionMessage, ApprovalVotingMessage, NetworkBridgeMessage,
-		ChainApiMessage, AssignmentCheckResult, ApprovalCheckResult,
+		AssignmentCheckResult, ApprovalCheckResult,
 	},
 	ActiveLeavesUpdate, FromOverseer, OverseerSignal, SpawnedSubsystem, Subsystem, SubsystemContext,
 };
@@ -171,23 +171,16 @@ impl State {
 		for meta in metas.iter() {
 			match self.blocks.entry(meta.hash.clone()) {
 				hash_map::Entry::Vacant(entry) => {
-					// TODO: can we include parent_hash in `BlockApprovalMeta`?
-					let parent_hash = match request_parent_hash(ctx, meta.hash.clone()).await {
-						Some(parent_hash) => parent_hash,
-						None => continue,
-					};
-
 					entry.insert(BlockEntry {
 						known_by: HashMap::new(),
 						number: meta.number,
-						parent_hash,
+						parent_hash: meta.parent_hash.clone(),
 						knowledge: Knowledge::default(),
 						candidates: HashMap::new(),
 					});
 				}
 				_ => continue,
 			}
-			// TODO: how do we make sure there are no duplicates?
 			self.blocks_by_number.entry(meta.number).or_default().push(meta.hash.clone());
 		}
 		for (peer_id, view) in self.peer_views.iter() {
@@ -726,21 +719,6 @@ async fn modify_reputation(
 	ctx.send_message(AllMessages::NetworkBridge(
 		NetworkBridgeMessage::ReportPeer(peer_id, rep),
 	)).await;
-}
-
-async fn request_parent_hash(
-	ctx: &mut impl SubsystemContext<Message = ApprovalDistributionMessage>,
-	block_hash: Hash,
-) -> Option<Hash> {
-	let (tx, rx) = oneshot::channel();
-
-	ctx.send_message(AllMessages::from(ChainApiMessage::BlockHeader(
-		block_hash,
-		tx,
-	)).into()).await;
-
-	// Make sure this is really OK
-	rx.await.ok()?.ok()?.map(|h| h.parent_hash)
 }
 
 impl ApprovalDistribution {
