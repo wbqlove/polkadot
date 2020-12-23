@@ -152,7 +152,7 @@ impl State {
 				self.handle_peer_view_change(ctx, metrics, peer_id, view).await;
 			}
 			NetworkBridgeEvent::OurViewChange(view) => {
-				self.handle_our_view_change(metrics, view).await;
+				self.handle_our_view_change(metrics, view);
 			}
 			NetworkBridgeEvent::PeerMessage(peer_id, msg) => {
 				self.process_incoming_peer_message(ctx, metrics, peer_id, msg).await;
@@ -284,7 +284,7 @@ impl State {
 		}
 	}
 
-	async fn handle_our_view_change(
+	fn handle_our_view_change(
 		&mut self,
 		_metrics: &Metrics,
 		view: View,
